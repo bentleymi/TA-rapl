@@ -1,0 +1,45 @@
+{
+  "schemaVersion": "2.0.0",
+  "info": {
+    "title": "Power & Energy Add-on (powercap RAPL + hwmon power readings)",
+    "id": {
+      "group": null,
+      "name": "TA-rapl",
+      "version": "1.0.0"
+    },
+    "author": [{"name":"Michael \"JKat54\" Bentley","email":"michael@bentleypc.com","company":"BentleyPC LLC"}],
+    "releaseDate": "11/14/2026",
+    "description": "Collects power telemetry from /sys/class/powercap (RAPL energy counters in microjoules, package/core domain limits) and, as a fallback, from hwmon power sensors (/sys/class/hwmon power*_input). Emits JSON events to index=main (sourcetype rapl:status) and rapl.* metrics (energy counters, current watts, counts) to index=metrics (sourcetype rapl:metrics), with dashboards.",
+    "classification": {
+      "intendedAudience": "IT",
+      "categories": ["IT Operations"],
+      "developmentStatus": "Production/Latest"
+    },
+    "commonInformationModels": null,
+    "license": {
+      "name": "Source Available - Free personal use, commercial use requires paid license from BentleyPC LLC",
+      "text": "LICENSE",
+      "uri": null
+    },
+    "privacyPolicy": {
+      "name": null,
+      "text": null,
+      "uri": null
+    },
+    "releaseNotes": {
+      "name": null,
+      "text": null,
+      "uri": null
+    }
+  },
+  "dependencies": null,
+  "tasks": null,
+  "inputGroups": null,
+  "incompatibleApps": null,
+  "platformRequirements": null,
+  "supportedDeployments": [
+    "_standalone",
+    "_distributed"
+  ],
+  "targetWorkloads": ["_search_heads", "_indexers"]
+}

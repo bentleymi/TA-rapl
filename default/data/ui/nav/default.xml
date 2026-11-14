@@ -1,0 +1,7 @@
+<application>
+  <nav>
+    <view name="rapl_overview" />
+    <view name="rapl_metrics" />
+    <search label="TA-rapl Events" search="search index=main sourcetype=rapl:status" />
+  </nav>
+</application>

@@ -1,0 +1,47 @@
+<dashboard version="1.1" theme="light">
+  <label>TA-rapl Overview</label>
+  <description>Collects power telemetry from /sys/class/powercap (RAPL energy counters in microjoules, package/core domain limits) and, as a fallback, from hwmon power sensors (/sys/class/hwmon</description>
+  <row>
+    <panel>
+      <title>Hosts Reporting (latest)</title>
+      <table>
+        <search>
+          <query>index=main sourcetype="rapl:status"
+| stats latest(_time) as "Last seen", count as Reports by host
+| table host "Last seen" Reports</query>
+          <done/>
+        </search>
+        <option name="drilldown">none</option>
+      </table>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Distinct rapl.* Metrics (last hour)</title>
+      <single>
+        <search>
+          <query>| mcatalog values(metric_name) as m where index=metrics metric_name="rapl.*"
+| eval count=mvcount(m)</query>
+          <done/>
+        </search>
+        <option name="underLabel">rapl.* metrics streaming</option>
+      </single>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Issues (newest first)</title>
+      <table>
+        <search>
+          <query>index=main sourcetype="rapl:status" _raw="*alarm*"
+| sort - _time
+| table _time host _raw
+| rename _raw as Event
+| head 200</query>
+          <done/>
+        </search>
+        <option name="drilldown">none</option>
+      </table>
+    </panel>
+  </row>
+</dashboard>

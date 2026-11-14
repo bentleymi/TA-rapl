@@ -1,0 +1,53 @@
+TA-rapl
+====
+
+Collects power telemetry from /sys/class/powercap (RAPL energy counters in microjoules, package/core domain limits) and, as a fallback, from hwmon power sensors (/sys/class/hwmon power*_input). Emits JSON events to index=main (sourcetype rapl:status) and rapl.* metrics (energy counters, current watts, counts) to index=metrics (sourcetype rapl:metrics), with dashboards.
+
+Prerequisites
+-------------
+  * none - pure /sys reads (powercap when present, hwmon otherwise)
+  * Splunk Enterprise or Universal Forwarder 9.x - 10.6 (forwarder recommended
+    on monitored hosts).
+  * A metrics-typed index (default name: metrics) on the indexer:
+
+      [metrics]
+      datatype = metric
+
+    Forwarders only need that index to exist on the indexer side.
+  * No network egress, no root requirement beyond the Splunk service account.
+    Fully standalone add-on with no dependencies.
+
+Install
+-------
+Install on each monitored host (Apps > Install app from file, splunk install
+app, or deployment server), restart Splunk, then verify:
+
+  index=main sourcetype="rapl:status" | head
+
+Search quick reference
+----------------------
+  index=main sourcetype="rapl:status" | head
+  | mcatalog values(metric_name) where index=metrics metric_name="rapl.*" by host
+  | mstats avg("rapl.*") where index=metrics span=60s by host
+
+Usage
+-----
+Events: index=main sourcetype=rapl:status  (powercap domains, energy_uj, hwmon power chips)
+Metrics: rapl.<domain>_energy_uj, rapl.<chip>_<key>_watts, rapl.powercap_count
+Dashboards: TA-Rapl > Rapl Overview / Rapl Metrics
+
+Configure
+---------
+Override the interval or destination index in etc/apps/TA-rapl/local/inputs.conf
+(never edit default/).
+
+Troubleshooting
+---------------
+  * Intel RAPL (/sys/class/powercap/intel-rapl*) only; AMD hosts fall back to hwmon power chips.
+  * energy_uj counters are cumulative - take rate() in search-time math.
+
+License
+-------
+SOURCE-AVAILABLE (see LICENSE) - free personal, educational and evaluation
+use; commercial or production use requires a paid license from BentleyPC
+LLC (https://www.bentleypc.com).

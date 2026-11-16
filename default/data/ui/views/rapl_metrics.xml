@@ -1,51 +1,47 @@
 <dashboard version="1.1" theme="light">
   <label>TA-rapl Metrics</label>
-  <description>Index-time metrics over index=metrics (sourcetype=rapl:metrics)</description>
+  <description> Index-time metrics over index=metrics (sourcetype rapl:metrics); series prefixed 'rapl.'.</description>
   <row>
     <panel>
-      <title>All rapl.* series</title>
+      <title>Powercap domains &amp; power chips (counts)</title>
       <chart>
         <search>
-          <query>| mstats avg("rapl.*") as "v*" where index=metrics by metric_name span=5m
-| foreach v* [eval Value=coalesce(Value,&lt;&lt;FIELD&gt;&gt;)]
-| fields - v*
-| xyseries _time metric_name Value</query>
+          <query>| mstats avg("rapl.*count") as "v*" where index=metrics by metric_name span=5m
+| rename v* as "rapl.*count"</query>
           <done/>
         </search>
         <option name="charting.chart">line</option>
-        <option name="charting.chart.showDataLabels">none</option>
+        <option name="charting.chart.nullValueRendering">connect</option>
         <option name="charting.drilldown">none</option>
       </chart>
     </panel>
-      <panel>
-      <title>Energy counters (cumulative uJ)</title>
+  </row>
+  <row>
+    <panel>
+      <title>Power draw (W, per chip/hwmon)</title>
       <chart>
         <search>
-          <query>| mstats avg("rapl.*") as "v*" where index=metrics by metric_name span=5m
-| search metric_name IN ("*energy_uj*","*joules*")
-| foreach v* [eval Value=coalesce(Value,&lt;&lt;FIELD&gt;&gt;)]
-| fields - v*
-| xyseries _time metric_name Value</query>
+          <query>| mstats avg("rapl.*power1_watts") as "v*" where index=metrics by metric_name span=5m
+| rename v* as "rapl.*power1_watts"</query>
           <done/>
         </search>
         <option name="charting.chart">line</option>
-        <option name="charting.chart.showDataLabels">none</option>
+        <option name="charting.chart.nullValueRendering">connect</option>
         <option name="charting.drilldown">none</option>
       </chart>
     </panel>
-      <panel>
-      <title>Current power (watts)</title>
+  </row>
+  <row>
+    <panel>
+      <title>Energy in power domain (uJ cumulative)</title>
       <chart>
         <search>
-          <query>| mstats avg("rapl.*") as "v*" where index=metrics by metric_name span=5m
-| search metric_name="*_watts*"
-| foreach v* [eval Value=coalesce(Value,&lt;&lt;FIELD&gt;&gt;)]
-| fields - v*
-| xyseries _time metric_name Value</query>
+          <query>| mstats avg("rapl.pc_*_energy_uj") as "v*" where index=metrics by metric_name span=5m
+| rename v* as "rapl.pc_*_energy_uj"</query>
           <done/>
         </search>
         <option name="charting.chart">line</option>
-        <option name="charting.chart.showDataLabels">none</option>
+        <option name="charting.chart.nullValueRendering">connect</option>
         <option name="charting.drilldown">none</option>
       </chart>
     </panel>

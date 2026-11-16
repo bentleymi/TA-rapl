@@ -3,43 +3,78 @@
   <description>Collects power telemetry from /sys/class/powercap (RAPL energy counters in microjoules, package/core domain limits) and, as a fallback, from hwmon power sensors (/sys/class/hwmon</description>
   <row>
     <panel>
-      <title>Hosts Reporting (latest)</title>
+      <title>Powercap domains (per host, latest)</title>
+      <single>
+        <search>
+          <query>| mstats avg("rapl.powercap_count") as value where index=metrics span=5m
+| fields - _time | tail 1</query>
+          <done/>
+        </search>
+      </single>
+    </panel>
+    <panel>
+      <title>Power chips (per host, latest)</title>
+      <single>
+        <search>
+          <query>| mstats avg("rapl.chip_count") as value where index=metrics span=5m
+| fields - _time | tail 1</query>
+          <done/>
+        </search>
+      </single>
+    </panel>
+    <panel>
+      <title>Total power draw (W, fleet, latest)</title>
+      <single>
+        <search>
+          <query>index=main sourcetype="rapl:status"
+| eventstats latest(_time) as lt by host
+| dedup host lt
+| rex field=_raw max_match=0 "\"power1_watts\":\s*(?&lt;w&gt;[0-9.]+)"
+| mvexpand w
+| stats sum(w) as value</query>
+          <done/>
+        </search>
+      </single>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Powercap domains - latest per host</title>
       <table>
         <search>
           <query>index=main sourcetype="rapl:status"
-| stats latest(_time) as "Last seen", count as Reports by host
-| table host "Last seen" Reports</query>
+| dedup host
+| rex field=_raw max_match=0 "\"(?&lt;k&gt;[^\"]+)\":\s*(?&lt;o&gt;\{[^{}]*\})"
+| where match(o,"\"energy_uj\"")
+| eval z=mvzip(k,o,"^^")
+| mvexpand z
+| rex field=z "^(?&lt;k&gt;[^^]+)\^\^(?&lt;o&gt;.+)$"
+| spath input=o path=energy_uj | spath input=o path=max_energy_range_uj | spath input=o path=max_power_limit_uw | spath input=o path=min_power_limit_uw
+| table host k energy_uj max_energy_range_uj max_power_limit_uw min_power_limit_uw</query>
           <done/>
         </search>
+        <option name="count">100</option>
         <option name="drilldown">none</option>
       </table>
     </panel>
   </row>
   <row>
     <panel>
-      <title>Distinct rapl.* Metrics (last hour)</title>
-      <single>
-        <search>
-          <query>| mcatalog values(metric_name) as m where index=metrics metric_name="rapl.*"
-| eval count=mvcount(m)</query>
-          <done/>
-        </search>
-        <option name="underLabel">rapl.* metrics streaming</option>
-      </single>
-    </panel>
-  </row>
-  <row>
-    <panel>
-      <title>Issues (newest first)</title>
+      <title>Power chips - latest per host</title>
       <table>
         <search>
-          <query>index=main sourcetype="rapl:status" _raw="*alarm*"
-| sort - _time
-| table _time host _raw
-| rename _raw as Event
-| head 200</query>
+          <query>index=main sourcetype="rapl:status"
+| dedup host
+| rex field=_raw max_match=0 "\"(?&lt;k&gt;[^\"]+)\":\s*(?&lt;o&gt;\{[^{}]*\})"
+| where match(o,"\"power1_watts\"")
+| eval z=mvzip(k,o,"^^")
+| mvexpand z
+| rex field=z "^(?&lt;k&gt;[^^]+)\^\^(?&lt;o&gt;.+)$"
+| spath input=o path=power1_watts
+| table host k power1_watts</query>
           <done/>
         </search>
+        <option name="count">100</option>
         <option name="drilldown">none</option>
       </table>
     </panel>

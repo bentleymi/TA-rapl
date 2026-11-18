@@ -45,10 +45,10 @@
           <query>index=main sourcetype="rapl:status"
 | dedup host
 | rex field=_raw max_match=0 "\"(?&lt;k&gt;[^\"]+)\":\s*(?&lt;o&gt;\{[^{}]*\})"
-| where match(o,"\"energy_uj\"")
 | eval z=mvzip(k,o,"^^")
 | mvexpand z
 | rex field=z "^(?&lt;k&gt;[^^]+)\^\^(?&lt;o&gt;.+)$"
+| where match(o,"\"energy_uj\"")
 | spath input=o path=energy_uj | spath input=o path=max_energy_range_uj | spath input=o path=max_power_limit_uw | spath input=o path=min_power_limit_uw
 | table host k energy_uj max_energy_range_uj max_power_limit_uw min_power_limit_uw</query>
           <done/>
@@ -66,10 +66,10 @@
           <query>index=main sourcetype="rapl:status"
 | dedup host
 | rex field=_raw max_match=0 "\"(?&lt;k&gt;[^\"]+)\":\s*(?&lt;o&gt;\{[^{}]*\})"
-| where match(o,"\"power1_watts\"")
 | eval z=mvzip(k,o,"^^")
 | mvexpand z
 | rex field=z "^(?&lt;k&gt;[^^]+)\^\^(?&lt;o&gt;.+)$"
+| where match(o,"\"power1_watts\"")
 | spath input=o path=power1_watts
 | table host k power1_watts</query>
           <done/>

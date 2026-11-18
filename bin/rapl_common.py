@@ -8,6 +8,7 @@ import sys
 POWERCAP = "/sys/class/powercap"
 HWMON = "/sys/class/hwmon"
 RAPL_PREFIX = "intel-rapl"
+RAPL_CAT = "/usr/local/sbin/ta_rapl_cat"
 
 
 def read_file(path):
@@ -16,6 +17,24 @@ def read_file(path):
             return fh.read().strip()
     except OSError:
         return None
+
+
+def sudo_read(path):
+    """Read a sysfs file via the ta_rapl_cat sudo wrapper (energy_uj is 0400 root)."""
+    if not os.path.exists(RAPL_CAT):
+        return None
+    lines = run_lines(["/usr/bin/sudo", "-n", RAPL_CAT, path], timeout=10)
+    if not lines:
+        return None
+    return lines[0].strip() or None
+
+
+def read_powercap_attr(path, fn):
+    full = os.path.join(path, fn)
+    val = read_file(full)
+    if val is None:
+        val = sudo_read(full)
+    return val
 
 
 def run_lines(cmd, timeout=25):
@@ -46,14 +65,18 @@ def _domain_key(dirname):
 
 
 def _read_powercap_dir(path, entry):
-    energy = _int(read_file(os.path.join(path, "energy_uj")))
-    if energy is None:
+    # A directory is a RAPL domain iff an energy_uj attribute exists; unreadable
+    # (EACCES) must not be mistaken for absent, else powercap vanishes fleet-wide.
+    if not os.path.exists(os.path.join(path, "energy_uj")):
         return None
+    energy = _int(read_powercap_attr(path, "energy_uj"))
     rec = {
-        "name": _sanitize(read_file(os.path.join(path, "name")) or entry),
-        "energy_uj": energy,
+        "name": _sanitize(read_powercap_attr(path, "name") or entry),
+        "energy_readable": 1 if energy is not None else 0,
     }
-    mx = _int(read_file(os.path.join(path, "max_energy_range_uj")))
+    if energy is not None:
+        rec["energy_uj"] = energy
+    mx = _int(read_powercap_attr(path, "max_energy_range_uj"))
     if mx is not None:
         rec["max_energy_range_uj"] = mx
     limits = []
@@ -63,7 +86,7 @@ def _read_powercap_dir(path, entry):
         files = []
     for fn in files:
         if re.match(r"^constraint_\d+_power_limit_uw$", fn):
-            v = _int(read_file(os.path.join(path, fn)))
+            v = _int(read_powercap_attr(path, fn))
             if v is not None:
                 limits.append(v)
     if limits:

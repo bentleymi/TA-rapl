@@ -7,12 +7,20 @@
       "name": "TA-rapl",
       "version": "1.0.2"
     },
-    "author": [{"name":"Michael \"JKat54\" Bentley","email":"michael@bentleypc.com","company":"BentleyPC LLC"}],
+    "author": [
+      {
+        "name": "Michael \"JKat54\" Bentley",
+        "email": "michael@bentleypc.com",
+        "company": "BentleyPC LLC"
+      }
+    ],
     "releaseDate": "11/16/2026",
     "description": "Collects power telemetry from /sys/class/powercap (RAPL energy counters in microjoules, package/core domain limits) and, as a fallback, from hwmon power sensors (/sys/class/hwmon power*_input). Emits JSON events to index=main (sourcetype rapl:status) and rapl.* metrics (energy counters, current watts, counts) to index=metrics (sourcetype rapl:metrics), with dashboards.",
     "classification": {
       "intendedAudience": "IT",
-      "categories": ["IT Operations"],
+      "categories": [
+        "IT Operations"
+      ],
       "developmentStatus": "Production/Latest"
     },
     "commonInformationModels": null,
@@ -41,5 +49,9 @@
     "_standalone",
     "_distributed"
   ],
-  "targetWorkloads": ["_search_heads", "_indexers"]
+  "targetWorkloads": [
+    "_search_heads",
+    "_indexers"
+  ],
+  "version": "1.0.8"
 }
